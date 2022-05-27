@@ -3,7 +3,6 @@
 
 #include "MSBoidMovementProcessor.h"
 
-#include "MassCommonFragments.h"
 #include "MassCommonTypes.h"
 #include "MassRepresentationTypes.h"
 #include "MSBoidFragments.h"
@@ -37,7 +36,7 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 			for (int i = 0; i < NumEntities; ++i)
 			{
-				Locations[i].Location = Locations[i].Location + Velocities[i].Velocity;
+				Locations[i].Location = Locations[i].Location + Velocities[i].Velocity * Context.GetDeltaTimeSeconds();
 			}
 		});
 	}

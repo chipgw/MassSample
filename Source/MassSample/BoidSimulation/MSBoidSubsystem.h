@@ -19,6 +19,8 @@ class MASSSAMPLE_API UMSBoidSubsystem : public UWorldSubsystem
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
+
 public:
 
 	UPROPERTY(Transient)
@@ -29,6 +31,10 @@ public:
 	FMassExecutionContext Context;
 	
 	TUniquePtr<FMSBoidOctree> BoidOctree;
+
+	UPROPERTY()
+	UHierarchicalInstancedStaticMeshComponent* Hism;
+	
 	void DrawDebugOctree();
 
 private:

@@ -15,8 +15,11 @@ class MASSSAMPLE_API UMSBoidDevSettings : public UDeveloperSettings
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boids")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Boids")
 	TSoftObjectPtr<UMassEntityConfigAsset> BoidEntityConfig;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Boids")
+	TSoftObjectPtr<UStaticMesh> StaticMesh;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Boids")
 	int32 SimulationExtentFromCenter = 40000;

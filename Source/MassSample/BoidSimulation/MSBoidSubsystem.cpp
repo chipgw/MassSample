@@ -7,7 +7,9 @@
 #include "MassEntitySubsystem.h"
 #include "MSBoidDevSettings.h"
 #include "MSBoidFragments.h"
+#include "MSBoidHismHelper.h"
 #include "Common/Misc/MSBPFunctionLibrary.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "GameFramework/GameStateBase.h"
 
 void UMSBoidSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -25,14 +27,21 @@ void UMSBoidSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	BoidOctree = MakeUnique<FMSBoidOctree>(FVector::ZeroVector, SimulationExtentFromCenter);
 
+	GetWorld()->SpawnActor<AMSBoidHismHelper>(AMSBoidHismHelper::StaticClass());
+
 	MassEntitySubsystem = GetWorld()->GetSubsystem<UMassEntitySubsystem>();
 
 	Context = MassEntitySubsystem->CreateExecutionContext(0);
+}
+
+void UMSBoidSubsystem::OnWorldBeginPlay(UWorld& InWorld)
+{
+	Super::OnWorldBeginPlay(InWorld);
 
 	// Execute with delay so that actors are initialized to avoid crashes
 	FTimerHandle UnusedHandle;
 	GetWorld()->GetTimerManager().SetTimer(
-		UnusedHandle, this, &UMSBoidSubsystem::SpawnRandomBoids, 2, false);
+		UnusedHandle, this, &UMSBoidSubsystem::SpawnRandomBoids, 0.2, false);
 }
 
 void UMSBoidSubsystem::DrawDebugOctree()
@@ -113,7 +122,7 @@ void UMSBoidSubsystem::SpawnBoid()
 		);
 
 		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidLocationFragment>(NewBoid.Entity).Location = FMath::VRand() *
-			                     FMath::RandRange(10, SimulationExtentFromCenter / 2);
+			FMath::RandRange(10, SimulationExtentFromCenter / 2);
 
 		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidVelocityFragment>(NewBoid.Entity).Velocity = FMath::VRand() *
 			FMath::RandRange(10, BoidMaxSpeed);
@@ -121,11 +130,14 @@ void UMSBoidSubsystem::SpawnBoid()
 		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidAccelerationFragment>(NewBoid.Entity).Acceleration =
 			FMath::VRand();
 
+		auto NewBoidLocation = MassEntitySubsystem->GetFragmentDataChecked<FMSBoidLocationFragment>(NewBoid.Entity).
+		                                            Location;
+		
+		int32 HismIndex = Hism->AddInstance(FTransform(NewBoidLocation), true);
+
+		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidRenderFragment>(NewBoid.Entity).HismId = HismIndex;
+
 		if (bDrawDebugBoxes) UE_LOG(LogTemp, Warning, TEXT("UMSBoidSubsystem::SpawnBoid() id: %d, location: %s"),
-		                            NewBoid.Entity.Index,
-		                            *MassEntitySubsystem->GetFragmentDataChecked<FMSBoidLocationFragment>(NewBoid.Entity
-		                            ).
-		                            Location.
-		                            ToString())		;
+		                            NewBoid.Entity.Index, *NewBoidLocation.ToString());
 	}
 }

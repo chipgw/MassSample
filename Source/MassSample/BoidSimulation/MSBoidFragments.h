@@ -24,3 +24,10 @@ struct FMSBoidAccelerationFragment : public FMassFragment
 	GENERATED_BODY()
 	FVector Acceleration;
 };
+
+USTRUCT()
+struct FMSBoidRenderFragment : public FMassFragment
+{
+	GENERATED_BODY()
+	uint32 HismId;
+};
