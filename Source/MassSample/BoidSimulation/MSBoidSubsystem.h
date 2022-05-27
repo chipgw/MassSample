@@ -5,9 +5,10 @@
 #include "CoreMinimal.h"
 #include "MassEntityConfigAsset.h"
 #include "MassEntitySubsystem.h"
-#include "MSBoidQuadtree.h"
+#include "MSBoidOctree.h"
 #include "MSBoidSubsystem.generated.h"
 
+class UMSBoidDevSettings;
 class UMassEntitySubsystem;
 /**
  * 
@@ -23,6 +24,8 @@ class MASSSAMPLE_API UMSBoidSubsystem : public UWorldSubsystem
 
 public:
 
+	void GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
+
 	UPROPERTY(Transient)
 	UMassEntitySubsystem* MassEntitySubsystem;
 
@@ -34,6 +37,9 @@ public:
 
 	UPROPERTY()
 	UHierarchicalInstancedStaticMeshComponent* Hism;
+
+	UPROPERTY()
+	UMSBoidDevSettings* BoidSettings;
 	
 	void DrawDebugOctree();
 

@@ -16,7 +16,7 @@ void UMSBoidSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	const UMSBoidDevSettings* BoidSettings = GetDefault<UMSBoidDevSettings>();
+	BoidSettings = GetMutableDefault<UMSBoidDevSettings>();
 
 	BoidEntityConfig = BoidSettings->BoidEntityConfig.LoadSynchronous();
 	SimulationExtentFromCenter = BoidSettings->SimulationExtentFromCenter;
@@ -83,13 +83,13 @@ void UMSBoidSubsystem::DrawDebugOctree()
 					8
 				);
 
-				TArrayView<const UE::Math::TVector<double>> BoidsInNode = BoidOctree->GetElementsForNode(
+				TArrayView<const FMSBoidInOctree> BoidsInNode = BoidOctree->GetElementsForNode(
 					CurrentNodeIndex);
-				for (UE::Math::TVector<double> Boid : BoidsInNode)
+				for (const FMSBoidInOctree& Boid : BoidsInNode)
 				{
 					DrawDebugSphere(
 						GetWorld(),
-						Boid,
+						Boid.Location,
 						100,
 						8,
 						FColor::Red,
@@ -127,7 +127,7 @@ void UMSBoidSubsystem::SpawnBoid()
 		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidVelocityFragment>(NewBoid.Entity).Velocity = FMath::VRand() *
 			FMath::RandRange(10, BoidMaxSpeed);
 
-		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidAccelerationFragment>(NewBoid.Entity).Acceleration =
+		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidForcesFragment>(NewBoid.Entity).ForceResult =
 			FMath::VRand();
 
 		auto NewBoidLocation = MassEntitySubsystem->GetFragmentDataChecked<FMSBoidLocationFragment>(NewBoid.Entity).

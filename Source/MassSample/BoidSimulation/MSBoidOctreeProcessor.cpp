@@ -21,6 +21,7 @@ void UMSBoidOctreeProcessor::Initialize(UObject& Owner)
 void UMSBoidOctreeProcessor::ConfigureQueries()
 {
 	RebuildOctreeQuery.AddRequirement<FMSBoidLocationFragment>(EMassFragmentAccess::ReadOnly);
+	RebuildOctreeQuery.AddRequirement<FMSBoidVelocityFragment>(EMassFragmentAccess::ReadOnly);
 }
 
 void UMSBoidOctreeProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FMassExecutionContext& Context)
@@ -32,11 +33,13 @@ void UMSBoidOctreeProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FMas
 	{
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Locations = Context.GetFragmentView<FMSBoidLocationFragment>();
+		const auto Velocities = Context.GetFragmentView<FMSBoidVelocityFragment>();
 
 		for (int i = 0; i < NumEntities; ++i)
 		{
 			const FVector& Location = Locations[i].Location;
-			BoidSubsystem->BoidOctree->AddElement(Location);
+			const FVector& Velocity = Velocities[i].Velocity;
+			BoidSubsystem->BoidOctree->AddElement(FMSBoidInOctree(Location, Velocity));
 		}
 	});
 

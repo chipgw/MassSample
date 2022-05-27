@@ -19,10 +19,10 @@ struct FMSBoidVelocityFragment : public FMassFragment
 };
 
 USTRUCT()
-struct FMSBoidAccelerationFragment : public FMassFragment
+struct FMSBoidForcesFragment : public FMassFragment
 {
 	GENERATED_BODY()
-	FVector Acceleration;
+	FVector ForceResult;
 };
 
 USTRUCT()

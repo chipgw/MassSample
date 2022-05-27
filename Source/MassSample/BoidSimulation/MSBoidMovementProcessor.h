@@ -24,5 +24,7 @@ class MASSSAMPLE_API UMSBoidMovementProcessor : public UMassProcessor
 	UPROPERTY()
 	UMSBoidSubsystem* BoidSubsystem;
 
+	FMassEntityQuery CalculateForcesQuery;
+	FMassEntityQuery RotateBoidsQuery;
 	FMassEntityQuery MoveBoidsQuery;
 };
