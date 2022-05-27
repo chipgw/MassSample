@@ -21,7 +21,6 @@ void UMSBoidSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	BoidEntityConfig = BoidSettings->BoidEntityConfig.LoadSynchronous();
 	SimulationExtentFromCenter = BoidSettings->SimulationExtentFromCenter;
 	NumOfBoids = BoidSettings->NumOfBoids;
-	BoidMaxSpeed = BoidSettings->BoidMaxSpeed;
 	bDrawDebugBoxes = BoidSettings->DrawDebugBoxes;
 	bIsStatic = BoidSettings->Static;
 
@@ -42,6 +41,17 @@ void UMSBoidSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	FTimerHandle UnusedHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		UnusedHandle, this, &UMSBoidSubsystem::SpawnRandomBoids, 0.2, false);
+}
+
+TArray<FMSBoidInOctree> UMSBoidSubsystem::GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox)
+{
+	TArray<FMSBoidInOctree> FoundBoids;
+	BoidOctree->FindElementsWithBoundsTest(QueryBox, [&](const FMSBoidInOctree& Boid)
+	{
+		FoundBoids.Push(Boid);
+	});
+
+	return FoundBoids;
 }
 
 void UMSBoidSubsystem::DrawDebugOctree()

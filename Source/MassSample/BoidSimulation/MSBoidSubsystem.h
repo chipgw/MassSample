@@ -23,8 +23,7 @@ class MASSSAMPLE_API UMSBoidSubsystem : public UWorldSubsystem
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 public:
-
-	void GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
+	TArray<FMSBoidInOctree> GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
 
 	UPROPERTY(Transient)
 	UMassEntitySubsystem* MassEntitySubsystem;
@@ -43,6 +42,24 @@ public:
 	
 	void DrawDebugOctree();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Simulation")
+	int32 BoidMaxSpeed = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Simulation")
+	float BoidSightRadius = 200;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Forces")
+	float TargetWeight = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Forces")
+	float AlignWeight = 0.5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Forces")
+	float SeparationWeight = 0.5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boids|Forces")
+	float CohesionWeight = 0.5;
+
 private:
 
 	void SpawnRandomBoids();
@@ -51,7 +68,6 @@ private:
 
 	int32 SimulationExtentFromCenter;
 	int32 NumOfBoids;
-	int32 BoidMaxSpeed;
 
 public:
 	bool bDrawDebugBoxes;

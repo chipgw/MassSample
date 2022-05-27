@@ -22,6 +22,7 @@ void UMSBoidRenderProcessor::Initialize(UObject& Owner)
 void UMSBoidRenderProcessor::ConfigureQueries()
 {
 	RenderBoidsQuery.AddRequirement<FMSBoidLocationFragment>(EMassFragmentAccess::ReadOnly);
+	RenderBoidsQuery.AddRequirement<FMSBoidVelocityFragment>(EMassFragmentAccess::ReadOnly);
 	RenderBoidsQuery.AddRequirement<FMSBoidRenderFragment>(EMassFragmentAccess::ReadOnly);
 }
 
@@ -31,16 +32,19 @@ void UMSBoidRenderProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FMas
 	{
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Locations = Context.GetFragmentView<FMSBoidLocationFragment>();
+		const auto Velocities = Context.GetFragmentView<FMSBoidVelocityFragment>();
 		const auto HismIndexes = Context.GetFragmentView<FMSBoidRenderFragment>();
 
 		for (int i = 0; i < NumEntities; ++i)
 		{
 			const FVector& Location = Locations[i].Location;
+			const FVector& Velocity = Velocities[i].Velocity;
 			const uint32 HismIndex = HismIndexes[i].HismId;
 
 			BoidSubsystem->Hism->UpdateInstanceTransform(
 				HismIndex,
-				FTransform(Location),
+				FTransform(FRotator(Velocity.X, Velocity.Y, Velocity.Z), Location, FVector(1)),
+				//FTransform(Location),
 				true,
 				false,
 				true

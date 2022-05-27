@@ -26,6 +26,13 @@ struct FMSBoidForcesFragment : public FMassFragment
 };
 
 USTRUCT()
+struct FMSBoidTargetFragment : public FMassFragment
+{
+	GENERATED_BODY()
+	FVector Target;
+};
+
+USTRUCT()
 struct FMSBoidRenderFragment : public FMassFragment
 {
 	GENERATED_BODY()
