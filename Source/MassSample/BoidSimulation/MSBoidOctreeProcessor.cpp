@@ -39,7 +39,7 @@ void UMSBoidOctreeProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FMas
 		{
 			const FVector& Location = Locations[i].Location;
 			const FVector& Velocity = Velocities[i].Velocity;
-			BoidSubsystem->BoidOctree->AddElement(FMSBoidInOctree(Location, Velocity));
+			BoidSubsystem->BoidOctree->AddElement(FMSBoid(Location, Velocity, 0));
 		}
 	});
 

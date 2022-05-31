@@ -6,6 +6,8 @@
 #include "MassProcessor.h"
 #include "MSBoidRenderProcessor.generated.h"
 
+DECLARE_STATS_GROUP(TEXT("BoidsRender"), STATGROUP_BoidsRender, STATCAT_Advanced);
+
 class UMSBoidSubsystem;
 /**
  * 

@@ -9,6 +9,12 @@
 #include "MSBoidFragments.h"
 #include "Kismet/KismetMathLibrary.h"
 
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Movement update"), STAT_Move, STATGROUP_BoidsMove);
+
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Calculate forces"), STAT_MoveForces, STATGROUP_BoidsMove);
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Calculate velocity"), STAT_MoveVelocity, STATGROUP_BoidsMove);
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Perform Movement"), STAT_MoveMove, STATGROUP_BoidsMove);
+
 UMSBoidMovementProcessor::UMSBoidMovementProcessor()
 {
 	ExecutionOrder.ExecuteInGroup = UE::Mass::ProcessorGroupNames::Movement;
@@ -36,8 +42,12 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 {
 	if (BoidSubsystem->bIsStatic) return;
 
+	SCOPE_CYCLE_COUNTER(STAT_Move);
+
 	CalculateForcesQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
+		SCOPE_CYCLE_COUNTER(STAT_MoveForces);
+		
 		const int32 NumEntities = Context.GetNumEntities();
 		const float SightRadius = BoidSubsystem->BoidSightRadius;
 		const float TargetWeight = BoidSubsystem->TargetWeight;
@@ -50,13 +60,16 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 		for (int i = 0; i < NumEntities; ++i)
 		{
+			{
+				
+			}
 			const FBoxCenterAndExtent OctreeQuery = FBoxCenterAndExtent(Locations[i].Location, FVector(SightRadius));
-			const TArray<FMSBoidInOctree> BoidsInRadius = BoidSubsystem->GetBoidsInRadius(OctreeQuery);
+			const TArray<FMSBoid> BoidsInRadius = BoidSubsystem->GetBoidsInRadius(OctreeQuery);
 			TArray<FVector> BoidVelocities;
 			TArray<FVector> BoidLocations;
 			TArray<FVector> BoidRepulsionForces;
 
-			for (const FMSBoidInOctree& Boid : BoidsInRadius)
+			for (const FMSBoid& Boid : BoidsInRadius)
 			{
 				BoidVelocities.Push(Boid.Velocity);
 				BoidLocations.Push(Boid.Location);
@@ -80,6 +93,8 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 	CalculateVelocityQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
+		SCOPE_CYCLE_COUNTER(STAT_MoveVelocity);
+		
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Velocities = Context.GetMutableFragmentView<FMSBoidVelocityFragment>();
 		const auto Forces = Context.GetFragmentView<FMSBoidForcesFragment>();
@@ -93,6 +108,8 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 	MoveBoidsQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
+		SCOPE_CYCLE_COUNTER(STAT_MoveMove);
+		
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Locations = Context.GetMutableFragmentView<FMSBoidLocationFragment>();
 		const auto Velocities = Context.GetFragmentView<FMSBoidVelocityFragment>();

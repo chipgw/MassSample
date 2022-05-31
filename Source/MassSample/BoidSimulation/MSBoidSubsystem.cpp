@@ -24,6 +24,14 @@ void UMSBoidSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	bDrawDebugBoxes = BoidSettings->DrawDebugBoxes;
 	bIsStatic = BoidSettings->Static;
 
+	BoidReplicator = (AMSBoidReplicator*) GetWorld()->SpawnActor(AMSBoidReplicator::StaticClass());
+	BoidReplicator->BoidSubsystem = this;
+	BoidReplicator->BatchesPerUpdate = BoidSettings->BatchesPerUpdate;
+	BoidReplicator->LocationUpdateFrequency = BoidSettings->LocationUpdateFrequency;
+	BoidReplicator->NetUpdatePrecisionTolerance = BoidSettings->NetUpdatePrecisionTolerance;
+	BoidReplicator->NetUpdateTimeThreshold = BoidSettings->NetUpdateTimeThreshold;
+	
+
 	BoidOctree = MakeUnique<FMSBoidOctree>(FVector::ZeroVector, SimulationExtentFromCenter);
 
 	GetWorld()->SpawnActor<AMSBoidHismHelper>(AMSBoidHismHelper::StaticClass());
@@ -43,10 +51,10 @@ void UMSBoidSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		UnusedHandle, this, &UMSBoidSubsystem::SpawnRandomBoids, 0.2, false);
 }
 
-TArray<FMSBoidInOctree> UMSBoidSubsystem::GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox)
+TArray<FMSBoid> UMSBoidSubsystem::GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox)
 {
-	TArray<FMSBoidInOctree> FoundBoids;
-	BoidOctree->FindElementsWithBoundsTest(QueryBox, [&](const FMSBoidInOctree& Boid)
+	TArray<FMSBoid> FoundBoids;
+	BoidOctree->FindElementsWithBoundsTest(QueryBox, [&](const FMSBoid& Boid)
 	{
 		FoundBoids.Push(Boid);
 	});
@@ -93,9 +101,9 @@ void UMSBoidSubsystem::DrawDebugOctree()
 					8
 				);
 
-				TArrayView<const FMSBoidInOctree> BoidsInNode = BoidOctree->GetElementsForNode(
+				TArrayView<const FMSBoid> BoidsInNode = BoidOctree->GetElementsForNode(
 					CurrentNodeIndex);
-				for (const FMSBoidInOctree& Boid : BoidsInNode)
+				for (const FMSBoid& Boid : BoidsInNode)
 				{
 					DrawDebugSphere(
 						GetWorld(),
@@ -146,6 +154,18 @@ void UMSBoidSubsystem::SpawnBoid()
 		int32 HismIndex = Hism->AddInstance(FTransform(NewBoidLocation), true);
 
 		MassEntitySubsystem->GetFragmentDataChecked<FMSBoidRenderFragment>(NewBoid.Entity).HismId = HismIndex;
+
+		uint16 NewId = NextBoidId;
+		NextBoidId++;
+
+		FMSBoid NewBoidStruct = FMSBoid(
+			NewBoidLocation,
+			FVector::ZeroVector,
+			NewId
+		);
+
+		NetIdMassHandleMap.Add(NewId, NewBoid.Entity);
+		BoidReplicator->AddBoid(NewBoidStruct);
 
 		if (bDrawDebugBoxes) UE_LOG(LogTemp, Warning, TEXT("UMSBoidSubsystem::SpawnBoid() id: %d, location: %s"),
 		                            NewBoid.Entity.Index, *NewBoidLocation.ToString());

@@ -8,6 +8,8 @@
 #include "MSBoidMovementProcessor.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
+DECLARE_CYCLE_STAT(TEXT("Boids Render ~ HISM update"), STAT_RenderInHism, STATGROUP_BoidsRender);
+
 UMSBoidRenderProcessor::UMSBoidRenderProcessor()
 {
 	ExecutionOrder.ExecuteAfter.Add(UE::Mass::ProcessorGroupNames::Movement);
@@ -28,6 +30,7 @@ void UMSBoidRenderProcessor::ConfigureQueries()
 
 void UMSBoidRenderProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FMassExecutionContext& Context)
 {
+	SCOPE_CYCLE_COUNTER(STAT_RenderInHism);
 	RenderBoidsQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
 		const int32 NumEntities = Context.GetNumEntities();

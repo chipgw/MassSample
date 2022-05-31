@@ -27,6 +27,22 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Boids|Simulation")
 	int32 NumOfBoids = 10;
 
+	/** How many times we divide the Boid array based on the LocationUpdateFrequency */
+	UPROPERTY(Config, BlueprintReadWrite, EditAnywhere, Category = "Boids|Net", meta = (ClampMin = 0))
+	uint8 BatchesPerUpdate = 10;
+
+	/** Location update frequency in seconds */
+	UPROPERTY(Config, BlueprintReadWrite, EditAnywhere, Category = "Boids|Net", meta = (ClampMin = 0))
+	float LocationUpdateFrequency = 1.0f;
+
+	/** Update precision tolerance */
+	UPROPERTY(Config, BlueprintReadWrite, EditAnywhere, Category = "Boids|Net", meta = (ClampMin = 0))
+	float NetUpdatePrecisionTolerance = 2.0f;
+
+	/** How much time we allow orders to arrive (before or after) we received the last update, in seconds */
+	UPROPERTY(Config, BlueprintReadWrite, EditAnywhere, Category = "Boids|Net", meta = (ClampMin = 0))
+	float NetUpdateTimeThreshold = 0.03f;
+
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Boids|Debug")
 	bool DrawDebugBoxes = true;
 

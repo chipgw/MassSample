@@ -7,6 +7,8 @@
 #include "MSBoidSubsystem.h"
 #include "MSBoidMovementProcessor.generated.h"
 
+DECLARE_STATS_GROUP(TEXT("BoidsMove"), STATGROUP_BoidsMove, STATCAT_Advanced);
+
 /**
  * 
  */

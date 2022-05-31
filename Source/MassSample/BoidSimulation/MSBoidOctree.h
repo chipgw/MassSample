@@ -3,12 +3,13 @@
 #include "CoreMinimal.h"
 #include "Math/GenericOctree.h"
 
-struct FMSBoidInOctree
+struct FMSBoid
 {
 	FVector Location;
 	FVector Velocity;
+	uint16 Id;
 
-	FMSBoidInOctree(FVector InLocation, FVector InVelocity) : Location(InLocation), Velocity(InVelocity)
+	FMSBoid(FVector InLocation, FVector InVelocity, uint16 Id) : Location(InLocation), Velocity(InVelocity), Id(Id)
 	{}
 };
 
@@ -26,19 +27,19 @@ struct FMSBoidOctreeSemantics
 
 	typedef TInlineAllocator<MaxElementsPerLeaf> ElementAllocator;
 
-	FORCEINLINE static FBoxCenterAndExtent GetBoundingBox(const FMSBoidInOctree& Element)
+	FORCEINLINE static FBoxCenterAndExtent GetBoundingBox(const FMSBoid& Element)
 	{
 		// ignore size, just store a small 0x0x0 box at the actor location. Test if more performant
 		return FBoxCenterAndExtent(Element.Location, FVector(0, 0, 0));
 	}
 
-	FORCEINLINE static bool AreElementsEqual(const FMSBoidInOctree& A, const FMSBoidInOctree& B)
+	FORCEINLINE static bool AreElementsEqual(const FMSBoid& A, const FMSBoid& B)
 	{
-		return (A.Location == B.Location);
+		return (A.Id == B.Id);
 	}
 
-	FORCEINLINE static void SetElementId(const FMSBoidInOctree& Element, FOctreeElementId2 OctreeElementID)
+	FORCEINLINE static void SetElementId(const FMSBoid& Element, FOctreeElementId2 OctreeElementID)
 	{}
 };
 
-typedef TOctree2<FMSBoidInOctree, FMSBoidOctreeSemantics> FMSBoidOctree;
+typedef TOctree2<FMSBoid, FMSBoidOctreeSemantics> FMSBoidOctree;

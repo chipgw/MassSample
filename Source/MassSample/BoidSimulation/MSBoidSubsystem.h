@@ -6,6 +6,7 @@
 #include "MassEntityConfigAsset.h"
 #include "MassEntitySubsystem.h"
 #include "MSBoidOctree.h"
+#include "MSBoidReplicator.h"
 #include "MSBoidSubsystem.generated.h"
 
 class UMSBoidDevSettings;
@@ -23,7 +24,7 @@ class MASSSAMPLE_API UMSBoidSubsystem : public UWorldSubsystem
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 public:
-	TArray<FMSBoidInOctree> GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
+	TArray<FMSBoid> GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
 
 	UPROPERTY(Transient)
 	UMassEntitySubsystem* MassEntitySubsystem;
@@ -31,6 +32,9 @@ public:
 	UPROPERTY()
 	UMassEntityConfigAsset* BoidEntityConfig;
 	FMassExecutionContext Context;
+
+	UPROPERTY()
+	AMSBoidReplicator* BoidReplicator;
 	
 	TUniquePtr<FMSBoidOctree> BoidOctree;
 
@@ -39,6 +43,9 @@ public:
 
 	UPROPERTY()
 	UMSBoidDevSettings* BoidSettings;
+
+	UPROPERTY()
+	TMap<uint16, FMassEntityHandle> NetIdMassHandleMap;
 	
 	void DrawDebugOctree();
 
@@ -68,6 +75,9 @@ private:
 
 	int32 SimulationExtentFromCenter;
 	int32 NumOfBoids;
+
+	// just for testing, incremental boid Id to map boids to FMassEntityHandles across the net
+	uint16 NextBoidId = 0;
 
 public:
 	bool bDrawDebugBoxes;
