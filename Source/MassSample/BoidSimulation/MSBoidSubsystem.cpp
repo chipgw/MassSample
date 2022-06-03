@@ -62,6 +62,18 @@ TArray<FMSBoid> UMSBoidSubsystem::GetBoidsInRadius(const FBoxCenterAndExtent& Qu
 	return FoundBoids;
 }
 
+TArray<FMassEntityHandle> UMSBoidSubsystem::GetBoidsInRadius(FVector Center, float Radius)
+{
+	TArray<FMassEntityHandle> FoundBoids;
+	HashGrid.FindPointsInBall(Center, Radius, [&, Center](const FMassEntityHandle& Entity)
+	{
+		const FVector EntityLocation = MassEntitySubsystem->GetFragmentDataChecked<FMSBoidLocationFragment>(Entity).Location;
+		return UE::Geometry::DistanceSquared(Center, EntityLocation);
+	}, FoundBoids);
+
+	return FoundBoids;
+}
+
 void UMSBoidSubsystem::DrawDebugOctree()
 {
 	if (bDrawDebugBoxes)
@@ -166,6 +178,8 @@ void UMSBoidSubsystem::SpawnBoid()
 
 		NetIdMassHandleMap.Add(NewId, NewBoid.Entity);
 		BoidReplicator->AddBoid(NewBoidStruct);
+
+		HashGrid.InsertPoint(NewBoid.Entity, NewBoidLocation);
 
 		if (bDrawDebugBoxes) UE_LOG(LogTemp, Warning, TEXT("UMSBoidSubsystem::SpawnBoid() id: %d, location: %s"),
 		                            NewBoid.Entity.Index, *NewBoidLocation.ToString());

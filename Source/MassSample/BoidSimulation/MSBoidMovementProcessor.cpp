@@ -11,7 +11,9 @@
 
 DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Movement update"), STAT_Move, STATGROUP_BoidsMove);
 
-DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Calculate forces"), STAT_MoveForces, STATGROUP_BoidsMove);
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Forces Query"), STAT_MoveForces, STATGROUP_BoidsMove);
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Query octree"), STAT_QueryOctree, STATGROUP_BoidsMove);
+DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Process Octree results"), STAT_ProcessOctreeResults, STATGROUP_BoidsMove);
 DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Calculate velocity"), STAT_MoveVelocity, STATGROUP_BoidsMove);
 DECLARE_CYCLE_STAT(TEXT("Boids Move ~ Perform Movement"), STAT_MoveMove, STATGROUP_BoidsMove);
 
@@ -44,10 +46,10 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 	SCOPE_CYCLE_COUNTER(STAT_Move);
 
-	CalculateForcesQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
+	CalculateForcesQuery.ForEachEntityChunk(EntitySubsystem, Context, [&, this](FMassExecutionContext& Context)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_MoveForces);
-		
+
 		const int32 NumEntities = Context.GetNumEntities();
 		const float SightRadius = BoidSubsystem->BoidSightRadius;
 		const float TargetWeight = BoidSubsystem->TargetWeight;
@@ -60,41 +62,64 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 
 		for (int i = 0; i < NumEntities; ++i)
 		{
-			{
-				
-			}
-			const FBoxCenterAndExtent OctreeQuery = FBoxCenterAndExtent(Locations[i].Location, FVector(SightRadius));
-			const TArray<FMSBoid> BoidsInRadius = BoidSubsystem->GetBoidsInRadius(OctreeQuery);
-			TArray<FVector> BoidVelocities;
-			TArray<FVector> BoidLocations;
-			TArray<FVector> BoidRepulsionForces;
+			TArray<FMSBoid> BoidsInRadius;
 
-			for (const FMSBoid& Boid : BoidsInRadius)
 			{
-				BoidVelocities.Push(Boid.Velocity);
-				BoidLocations.Push(Boid.Location);
-				FVector RepulsionDirection = Locations[i].Location - Boid.Location;
-				//RepulsionDirection = RepulsionDirection * (1 / RepulsionDirection.Length());
-
-				BoidRepulsionForces.Push(RepulsionDirection);
+				SCOPE_CYCLE_COUNTER(STAT_QueryOctree);
+				const FBoxCenterAndExtent OctreeQuery =
+					FBoxCenterAndExtent(Locations[i].Location, FVector(SightRadius));
+				BoidsInRadius = BoidSubsystem->GetBoidsInRadius(OctreeQuery);
 			}
 
-			const auto TargetForce = FVector::ZeroVector - Locations[i].Location;
-			const auto AlignForce = UKismetMathLibrary::GetVectorArrayAverage(BoidVelocities);
-			const auto AverageLocations = UKismetMathLibrary::GetVectorArrayAverage(BoidLocations);
-			const auto AverageRepulsion = UKismetMathLibrary::GetVectorArrayAverage(BoidRepulsionForces);
+			{
+				SCOPE_CYCLE_COUNTER(STAT_ProcessOctreeResults);
+				TArray<FVector> BoidVelocities;
+				TArray<FVector> BoidLocations;
+				TArray<FVector> BoidRepulsionForces;
 
-			const auto CohesionForce = AverageLocations - Locations[i].Location;
+				for (const FMSBoid& Boid : BoidsInRadius)
+				{
+					BoidVelocities.Push(Boid.Velocity);
+					BoidLocations.Push(Boid.Location);
+					FVector RepulsionDirection = Locations[i].Location - Boid.Location;
+					//RepulsionDirection = RepulsionDirection * (1 / RepulsionDirection.Length());
 
-			Forces[i].ForceResult = (AlignForce * AlignWeight) + (CohesionForce * CohesionWeight) + (AverageRepulsion *
-				SeparationWeight) + (TargetForce * TargetWeight);
+					BoidRepulsionForces.Push(RepulsionDirection);
+				}
+
+				// const TArray<FMassEntityHandle> BoidsInRadius = BoidSubsystem->GetBoidsInRadius(Locations[i].Location, SightRadius);
+				// TArray<FVector> BoidVelocities;
+				// TArray<FVector> BoidLocations;
+				// TArray<FVector> BoidRepulsionForces;
+				//
+				// for (const FMassEntityHandle& BoidHandle : BoidsInRadius)
+				// {
+				// 	const FVector& BoidHandleLocation = EntitySubsystem.GetFragmentDataChecked<FMSBoidLocationFragment>(BoidHandle).Location;
+				// 	BoidVelocities.Push(EntitySubsystem.GetFragmentDataChecked<FMSBoidVelocityFragment>(BoidHandle).Velocity);
+				// 	BoidLocations.Push(BoidHandleLocation);
+				// 	FVector RepulsionDirection = Locations[i].Location - BoidHandleLocation;
+				//
+				// 	BoidRepulsionForces.Push(RepulsionDirection);
+				// }
+
+				const auto TargetForce = FVector::ZeroVector - Locations[i].Location;
+				const auto AlignForce = UKismetMathLibrary::GetVectorArrayAverage(BoidVelocities);
+				const auto AverageLocations = UKismetMathLibrary::GetVectorArrayAverage(BoidLocations);
+				const auto AverageRepulsion = UKismetMathLibrary::GetVectorArrayAverage(BoidRepulsionForces);
+
+				const auto CohesionForce = AverageLocations - Locations[i].Location;
+
+				Forces[i].ForceResult = (AlignForce * AlignWeight) + (CohesionForce * CohesionWeight) + (
+					AverageRepulsion *
+					SeparationWeight) + (TargetForce * TargetWeight);
+			}
 		}
 	});
 
 	CalculateVelocityQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_MoveVelocity);
-		
+
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Velocities = Context.GetMutableFragmentView<FMSBoidVelocityFragment>();
 		const auto Forces = Context.GetFragmentView<FMSBoidForcesFragment>();
@@ -109,7 +134,7 @@ void UMSBoidMovementProcessor::Execute(UMassEntitySubsystem& EntitySubsystem, FM
 	MoveBoidsQuery.ForEachEntityChunk(EntitySubsystem, Context, [this](FMassExecutionContext& Context)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_MoveMove);
-		
+
 		const int32 NumEntities = Context.GetNumEntities();
 		const auto Locations = Context.GetMutableFragmentView<FMSBoidLocationFragment>();
 		const auto Velocities = Context.GetFragmentView<FMSBoidVelocityFragment>();

@@ -12,6 +12,13 @@ struct FMSBoidLocationFragment : public FMassFragment
 };
 
 USTRUCT()
+struct FMSBoidCachedLocationFragment : public FMassFragment
+{
+	GENERATED_BODY()
+	FVector CachedLocation;
+};
+
+USTRUCT()
 struct FMSBoidVelocityFragment : public FMassFragment
 {
 	GENERATED_BODY()

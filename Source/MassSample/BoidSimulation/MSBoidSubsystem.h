@@ -7,6 +7,7 @@
 #include "MassEntitySubsystem.h"
 #include "MSBoidOctree.h"
 #include "MSBoidReplicator.h"
+#include "Common/Fragments/MSHashGridFragments.h"
 #include "MSBoidSubsystem.generated.h"
 
 class UMSBoidDevSettings;
@@ -25,6 +26,7 @@ class MASSSAMPLE_API UMSBoidSubsystem : public UWorldSubsystem
 
 public:
 	TArray<FMSBoid> GetBoidsInRadius(const FBoxCenterAndExtent& QueryBox);
+	TArray<FMassEntityHandle> GetBoidsInRadius(FVector Center, float Radius);
 
 	UPROPERTY(Transient)
 	UMassEntitySubsystem* MassEntitySubsystem;
@@ -37,6 +39,8 @@ public:
 	AMSBoidReplicator* BoidReplicator;
 	
 	TUniquePtr<FMSBoidOctree> BoidOctree;
+
+	FMSHashGrid3D HashGrid = FMSHashGrid3D(100.0f,FMassEntityHandle());
 
 	UPROPERTY()
 	UHierarchicalInstancedStaticMeshComponent* Hism;

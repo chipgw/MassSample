@@ -11,6 +11,7 @@ UMSBoidOctreeProcessor::UMSBoidOctreeProcessor()
 {
 	ExecutionOrder.ExecuteBefore.Add(UE::Mass::ProcessorGroupNames::Movement);
 	ExecutionFlags = (int32)EProcessorExecutionFlags::All;
+	//ExecutionFlags = (int32)EProcessorExecutionFlags::None;
 }
 
 void UMSBoidOctreeProcessor::Initialize(UObject& Owner)
