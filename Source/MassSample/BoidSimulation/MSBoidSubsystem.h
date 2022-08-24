@@ -45,6 +45,9 @@ public:
 	UPROPERTY()
 	UHierarchicalInstancedStaticMeshComponent* Hism;
 
+	UPROPERTY(BlueprintReadWrite)
+	class UHealthBarContainerHud* HealthBarHud;
+
 	UPROPERTY()
 	UMSBoidDevSettings* BoidSettings;
 

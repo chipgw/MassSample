@@ -24,7 +24,8 @@ public class MassSample : ModuleRules
 				"Core", 
 				"CoreUObject", 
 				"Engine", 
-				"InputCore" 
+				"InputCore",
+				"SlateCore"
 			}
 		);
 
